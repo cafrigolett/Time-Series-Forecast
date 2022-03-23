@@ -1,0 +1,6 @@
+---
+title: "About This Project"
+---
+
+Two forecasts using recurrent neural networks, implemented in Matlab. The first forecast refers to a time series prediction over energy consumption. The prediction employs a multi-layer artificial neural network to forecast future energy consumption based on a Kaggle training set. A second Forecast is performed over historical data of average temperatures in two cities i.e., Aberdeen and Abu Dhabi.
+

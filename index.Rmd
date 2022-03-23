@@ -1,0 +1,144 @@
+---
+title: "Recurrent Neural Networks: Time-series Forecast"
+output: html_document
+author: "Cristián Frigolett C."
+geometry: margin=3.5cm
+
+---
+
+```{r setup, results='hide'}
+knitr::opts_chunk$set(echo = TRUE)
+library(kableExtra)
+
+
+```
+
+[//]: # (Justify text for the entire document)
+<div style="text-align: justify">
+
+
+## Introduction: Time-series Prediction
+
+This project focuses on applying the feedforward neural networks to typical machine learning tasks,
+such as time-series prediction. For time-series prediction, we first investigate one benchmark
+data set, namely, the Santa Fe dataset. Then, we analyze a global temperature data set.
+
+A time series is a sequence of observations, ordered in time. Forecasting involves training a model on
+historical data and using them to predict future observations. A simple example is a linear auto-regressive
+model. The linear auto-regressive (AR) model of a time-series $Z_t$ with $t = 1, 2, ..., \infty$ is given by:
+
+
+<h5 align="center">$\hat{z_t} = a_1 z_{t-1} + a_2 z_{t-2}+...+a_p z_{t-p}$<h5>
+
+
+with $a_i \in \mathbf{R}$ for $t = 1, 2, ...,p$ and $p$ p being the model lag. The prediction for a certain time t is equal to a weighted sum of the previous values up to a certain lag $p$. At the same time, the nonlinear variant (NAR)
+is described as:
+
+<h5 align="center">$\hat{z_t} = f(z_{t-1}, z_{t-2}, z_{t-1},..., z_{t-p})$<h5>
+
+
+## Santa Fe Dataset
+The Santa Fe dataset is obtained from a chaotic laser which can be described as a nonlinear dynamical
+system. Given are 1000 training data points. The aim is to predict the next 100 points (it is forbidden to
+include these points in the training set!). The training data stored in lasertrain.dat and the test data
+contained in laserpred.dat are shown in Figure 1.
+<br/>
+
+<p align="center">
+  <img src="C:\Users\PERROMALO\OneDrive - KU Leuven\Desktop\GitHub repositories\GLM\Time-Series-Forecast\img\trainingset.png" >
+  <h4 align="center">Figure 1: Training and test set</h4>
+</p>
+<br/>
+
+## Energy Consumption Forecast
+
+A grid search was performed to assess which hyperparameters yield the best performance in terms of Mean Squared Error. The grid search considered combinations of training algorithms, lag values ranging from 15 up to 70, and architectures with different number of layers and hidden units. The best solution for a single layer was with a lag of 20 and 15 neurons, resulting in an MSE of 701.12. Figure 2.1.1  displays the prediction of the network over the test set. The overall best solution corresponds to a network with 30 neurons in the first layer and 20 in the second, with a lag of 45. The approximation to the test values is adequate as can be seen in  Figure 2.1.2. with an MSE of 224. Both networks were train with the Levenberg-Marquardt optimization algorithm and 50 epochs. 
+<br/>
+
+[//]: # (images)
+
+<p align="center">
+  <img src="C:\Users\PERROMALO\OneDrive - KU Leuven\Desktop\GitHub repositories\GLM\Time-Series-Forecast\img\forecast1layer.png" >
+  <h4 align="center">Figure 2.1: Predicted forecast with 1 layer</h4>
+</p>
+<br/>
+
+
+<p align="center">
+  <img src="C:\Users\PERROMALO\OneDrive - KU Leuven\Desktop\GitHub repositories\GLM\Time-Series-Forecast\img\forecast2layers.png" >
+  <h4 align="center">Figure 2.2: Predicted forecast with 2 layers</h4>
+</p>
+<br/>
+
+<p align="center">
+  <img src="C:\Users\PERROMALO\OneDrive - KU Leuven\Desktop\GitHub repositories\GLM\Time-Series-Forecast\img\trainvaltest.png" width=600>
+  <h4 align="center">Figure 3: Visualization of the training, validation, and test sets of the Santa Fe forecast data</h4>
+</p>
+<br/>
+<br/>
+
+The most common way to construct a validation set is to sample a subset within the training set or to cross validate with a certain number of folds. This approach is not suitable for time-series given that sub-setting random data points for validation might result in a situation where the validation data points are from earlier in the time series than the training set, hence during validation we would be predicting the past with future data, which does not represent the situation we face in practice. Furthermore, data points in a time series are dependent, hence it is not reasonable to predict a random point with an ANN trained from an ordered series. Instead, a validation set for a time series needs to be sampled as the most recent sequence in the training time series. Nevertheless, this approach might not be fruitful if the validation portion of our time series has a particular pattern which is not representative of the whole series, in which case the optimal parameters will be selected to minimize the error for the non-representative validation pattern, ending up with a poor performance for test data and forthcoming data. Considering the data structure depicted in Figure 2.1.3, we notice that the validation portion cannot consider all the timeseries nuances e.g., the final section of the test set, approximately Date 1050 onwards is completely different with respect to the validation portion of the time series. 
+
+After conducting the same grid search as before, but using the continuous validation set this time as in Figure 2.1.3, the accuracy of the network decreased which supports the idea that performance won’t be enhanced if the validation set is not representative of the complete timeseries.
+
+
+
+
+## Climate Change Data Set
+
+Climate change is one of the biggest threats of our age. In this section, we work on a global climate change prediction data set using timeseries methods. Specifically, we will use the non-linear auto-regression (NAR) for this case. The data can be downloaded from [1]. Note that this dataset is repackaged from a newer compilation put together by the Berkeley Earth, which is affiliated with Lawrence Berkeley National Laboratory. The Berkeley Earth Surface Temperature Study combines 1.6 billion temperature reports from 16 pre-existing archives. In this dataset, we only use the global land temperature in `GlobalLandTemperaturesByCity.csv`, which includes:
+
+
+• `Date`: starts in 1750 for average land temperature and 1850 for max and min land temperatures;
+
+• `LandAverageTemperature`: global average land temperature in celsius;
+
+The historical average temperatures for Aberdeen and Abu Dhabi were select from 1850 up to 2015. After conducting a grid search (Table 3.1 and Tabl 3.2), for a set of combination of number of hidden units and lag sizes, the performance over the test set in both cities is adequate. Figures 2.1.1. and 2.1.2. display forecasts that are accurate with respect to the test set. Each combination was conducted 5 times and the found MSE were averaged to attain a more stable solution.
+A closer grid search, that iterates with less gap through the combination of hyper-parameters that already displayed good solutions in the original search could lead to find a better solution. Testing other optimization algorithms might also increase the forecast accuracy.
+
+<br/>
+<p align="center">
+  <img src="C:\Users\PERROMALO\OneDrive - KU Leuven\Desktop\GitHub repositories\GLM\Time-Series-Forecast\img\tempforecastAber.png" >
+  <h4 align="center">Figure 2.1:Temperature Forecast in Aberdeen</h4>
+</p>
+<br/>
+
+
+<p align="center">
+  <img src="C:\Users\PERROMALO\OneDrive - KU Leuven\Desktop\GitHub repositories\GLM\Time-Series-Forecast\img\tempforecastAbu.png" >
+  <h4 align="center">Figure 2.2: Temperature Forecast in Abu Dhabi</h4>
+</p>
+<br/>
+
+```{r grid search, echo=FALSE}
+#Abu Dhabi
+a<-c(2964, 4622, 1577, 1702, 1095, 595, 641, 299, 322, 76, 16)
+b<-c(5060,3123,2110,1436,784,604,367,222,45,109,34)
+e<-round(c(4876,2460,2031,1055,661,466,437,270,78,8.65,21), 0)
+
+#Aberdeen
+
+thirty<-c(3151,335,50,121,47,78,94,77,130,39,28)
+fifty<-c(1086,831,171,151,178,175,114,69,102,13,19)
+seventy<-round(c(729,506,327,358,214,192,125,61,51,7.92,14), 0)
+
+
+Lag<-c(25,35,45,55,65,75,85,95,105,115,125)
+
+Abu<-data.frame(Lag, thirty, fifty, seventy)%>%  kbl(col.names  = c("Lag", "30", "50", "70"), caption = 'Table 1: MSE Grid Search Abu Dhabi') %>%
+  kable_material(c("striped", "hover"))
+add_header_above(Abu, c(" ", "Hidden Units" = 3))
+
+
+Aberdeen<-data.frame(Lag, a, b, e)%>%  kbl(col.names  = c("Lag", "30", "50", "70"), caption = 'Table 2: MSE Grid Search Aberdeen') %>%
+  kable_material(c("striped", "hover"))
+add_header_above(Aberdeen, c(" ", "Hidden Units" = 3))
+
+
+```
+
+By looking at the structure of the two cities’ time series, we notice that they share the same pattern except by the range in which they oscillate, which in the case of Abu Dhabi is given by higher temperatures. For Abu Dhabi and Aberdeen, we obtained the same optimal hyper-parameters, and their respective performance is extremely similar. This similarity suggests that the tuned hyper-parameters of one city might be accurate to forecast the temperature of other cities if they share a similar pattern throughout the time series.
+
+<br>
+<br>
+</div>

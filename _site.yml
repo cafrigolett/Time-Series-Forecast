@@ -1,0 +1,16 @@
+name: "my-website"
+output_dir: "docs"
+navbar:
+  title: "Recurrent Neural Networks: Time-series Forecast"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "About"
+      href: about.html
+output:
+  html_document:
+    theme: cosmo
+    toc: true
+    highlight: textmate
+    css: styles.css
+
