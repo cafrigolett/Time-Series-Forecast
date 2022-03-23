@@ -6,13 +6,6 @@ geometry: margin=3.5cm
 
 ---
 
-```{r setup, results='hide'}
-knitr::opts_chunk$set(echo = TRUE)
-library(kableExtra)
-
-
-```
-
 [//]: # (Justify text for the entire document)
 <div style="text-align: justify">
 
@@ -93,7 +86,7 @@ Climate change is one of the biggest threats of our age. In this section, we wor
 
 • `LandAverageTemperature`: global average land temperature in celsius;
 
-The historical average temperatures for Aberdeen and Abu Dhabi were select from 1850 up to 2015. After conducting a grid search (Table 3.1 and Tabl 3.2), for a set of combination of number of hidden units and lag sizes, the performance over the test set in both cities is adequate. Figures 2.1.1. and 2.1.2. display forecasts that are accurate with respect to the test set. Each combination was conducted 5 times and the found MSE were averaged to attain a more stable solution.
+The historical average temperatures for Aberdeen and Abu Dhabi were select from 1850 up to 2015. After conducting a grid search (Table 1 and Table 2), for a set of combination of number of hidden units and lag sizes, the performance over the test set in both cities is adequate. Figures 2.1. and 2.2 display forecasts that are accurate with respect to the test set. Each combination was conducted 5 times and the found MSE were averaged to attain a more stable solution.
 A closer grid search, that iterates with less gap through the combination of hyper-parameters that already displayed good solutions in the original search could lead to find a better solution. Testing other optimization algorithms might also increase the forecast accuracy.
 
 <br/>
@@ -111,6 +104,9 @@ A closer grid search, that iterates with less gap through the combination of hyp
 <br/>
 
 ```{r grid search, echo=FALSE}
+
+library(kableExtra)
+library(dplyr)
 #Abu Dhabi
 a<-c(2964, 4622, 1577, 1702, 1095, 595, 641, 299, 322, 76, 16)
 b<-c(5060,3123,2110,1436,784,604,367,222,45,109,34)
@@ -128,6 +124,7 @@ Lag<-c(25,35,45,55,65,75,85,95,105,115,125)
 Abu<-data.frame(Lag, thirty, fifty, seventy)%>%  kbl(col.names  = c("Lag", "30", "50", "70"), caption = 'Table 1: MSE Grid Search Abu Dhabi') %>%
   kable_material(c("striped", "hover"))
 add_header_above(Abu, c(" ", "Hidden Units" = 3))
+
 
 
 Aberdeen<-data.frame(Lag, a, b, e)%>%  kbl(col.names  = c("Lag", "30", "50", "70"), caption = 'Table 2: MSE Grid Search Aberdeen') %>%
