@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Cristián Frigolett C." />
+
+
+<title>Recurrent Neural Networks: Time-series Forecast</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+<link rel="stylesheet" href="styles.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Recurrent Neural Networks: Time-series Forecast</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Recurrent Neural Networks: Time-series Forecast</h1>
+<h4 class="author">Cristián Frigolett C.</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#introduction-time-series-prediction">Introduction: Time-series Prediction</a></li>
+<li><a href="#santa-fe-dataset">Santa Fe Dataset</a></li>
+<li><a href="#energy-consumption-forecast">Energy Consumption Forecast</a></li>
+<li><a href="#climate-change-data-set">Climate Change Data Set</a></li>
+</ul>
+</div>
+
+<pre class="r"><code>knitr::opts_chunk$set(echo = TRUE)
+library(kableExtra)</code></pre>
+<div style="text-align: justify">
+
+
+<div id="introduction-time-series-prediction" class="section level2">
+<h2>Introduction: Time-series Prediction</h2>
+<p>This project focuses on applying the feedforward neural networks to typical machine learning tasks, such as time-series prediction. For time-series prediction, we first investigate one benchmark data set, namely, the Santa Fe dataset. Then, we analyze a global temperature data set.</p>
+<p>A time series is a sequence of observations, ordered in time. Forecasting involves training a model on historical data and using them to predict future observations. A simple example is a linear auto-regressive model. The linear auto-regressive (AR) model of a time-series <span class="math inline">\(Z_t\)</span> with <span class="math inline">\(t = 1, 2, ..., \infty\)</span> is given by:</p>
+<h5 align="center">
+<span class="math inline">\(\hat{z_t} = a_1 z_{t-1} + a_2 z_{t-2}+...+a_p z_{t-p}\)</span>
+<h5>
+<p>with <span class="math inline">\(a_i \in \mathbf{R}\)</span> for <span class="math inline">\(t = 1, 2, ...,p\)</span> and <span class="math inline">\(p\)</span> p being the model lag. The prediction for a certain time t is equal to a weighted sum of the previous values up to a certain lag <span class="math inline">\(p\)</span>. At the same time, the nonlinear variant (NAR) is described as:</p>
+<h5 align="center">
+<span class="math inline">\(\hat{z_t} = f(z_{t-1}, z_{t-2}, z_{t-1},..., z_{t-p})\)</span>
+<h5>
+</div>
+<div id="santa-fe-dataset" class="section level2">
+<h2>Santa Fe Dataset</h2>
+<p>The Santa Fe dataset is obtained from a chaotic laser which can be described as a nonlinear dynamical system. Given are 1000 training data points. The aim is to predict the next 100 points (it is forbidden to include these points in the training set!). The training data stored in lasertrain.dat and the test data contained in laserpred.dat are shown in Figure 1. <br/></p>
+<p align="center">
+<img src="img/trainingset.png" >
+<h4 align="center">
+Figure 1: Training and test set
+</h4>
+</p>
+<p><br/></p>
+</div>
+<div id="energy-consumption-forecast" class="section level2">
+<h2>Energy Consumption Forecast</h2>
+<p>A grid search was performed to assess which hyperparameters yield the best performance in terms of Mean Squared Error. The grid search considered combinations of training algorithms, lag values ranging from 15 up to 70, and architectures with different number of layers and hidden units. The best solution for a single layer was with a lag of 20 and 15 neurons, resulting in an MSE of 701.12. Figure 2.1.1 displays the prediction of the network over the test set. The overall best solution corresponds to a network with 30 neurons in the first layer and 20 in the second, with a lag of 45. The approximation to the test values is adequate as can be seen in Figure 2.1.2. with an MSE of 224. Both networks were train with the Levenberg-Marquardt optimization algorithm and 50 epochs. <br/></p>
+<p align="center">
+<img src="img/forecast1layer.png" >
+<h4 align="center">
+Figure 2.1: Predicted forecast with 1 layer
+</h4>
+</p>
+<p><br/></p>
+<p align="center">
+<img src="img/forecast2layers.png" >
+<h4 align="center">
+Figure 2.2: Predicted forecast with 2 layers
+</h4>
+</p>
+<p><br/></p>
+<p align="center">
+<img src="img/trainvaltest.png" width=600>
+<h4 align="center">
+Figure 3: Visualization of the training, validation, and test sets of the Santa Fe forecast data
+</h4>
+</p>
+<p><br/> <br/></p>
+<p>The most common way to construct a validation set is to sample a subset within the training set or to cross validate with a certain number of folds. This approach is not suitable for time-series given that sub-setting random data points for validation might result in a situation where the validation data points are from earlier in the time series than the training set, hence during validation we would be predicting the past with future data, which does not represent the situation we face in practice. Furthermore, data points in a time series are dependent, hence it is not reasonable to predict a random point with an ANN trained from an ordered series. Instead, a validation set for a time series needs to be sampled as the most recent sequence in the training time series. Nevertheless, this approach might not be fruitful if the validation portion of our time series has a particular pattern which is not representative of the whole series, in which case the optimal parameters will be selected to minimize the error for the non-representative validation pattern, ending up with a poor performance for test data and forthcoming data. Considering the data structure depicted in Figure 2.1.3, we notice that the validation portion cannot consider all the timeseries nuances e.g., the final section of the test set, approximately Date 1050 onwards is completely different with respect to the validation portion of the time series.</p>
+<p>After conducting the same grid search as before, but using the continuous validation set this time as in Figure 2.1.3, the accuracy of the network decreased which supports the idea that performance won’t be enhanced if the validation set is not representative of the complete timeseries.</p>
+</div>
+<div id="climate-change-data-set" class="section level2">
+<h2>Climate Change Data Set</h2>
+<p>Climate change is one of the biggest threats of our age. In this section, we work on a global climate change prediction data set using timeseries methods. Specifically, we will use the non-linear auto-regression (NAR) for this case. The data can be downloaded from [1]. Note that this dataset is repackaged from a newer compilation put together by the Berkeley Earth, which is affiliated with Lawrence Berkeley National Laboratory. The Berkeley Earth Surface Temperature Study combines 1.6 billion temperature reports from 16 pre-existing archives. In this dataset, we only use the global land temperature in <code>GlobalLandTemperaturesByCity.csv</code>, which includes:</p>
+<p>• <code>Date</code>: starts in 1750 for average land temperature and 1850 for max and min land temperatures;</p>
+<p>• <code>LandAverageTemperature</code>: global average land temperature in celsius;</p>
+<p>The historical average temperatures for Aberdeen and Abu Dhabi were select from 1850 up to 2015. After conducting a grid search (Table 3.1 and Tabl 3.2), for a set of combination of number of hidden units and lag sizes, the performance over the test set in both cities is adequate. Figures 2.1.1. and 2.1.2. display forecasts that are accurate with respect to the test set. Each combination was conducted 5 times and the found MSE were averaged to attain a more stable solution. A closer grid search, that iterates with less gap through the combination of hyper-parameters that already displayed good solutions in the original search could lead to find a better solution. Testing other optimization algorithms might also increase the forecast accuracy.</p>
+<br/>
+<p align="center">
+<img src="img/tempforecastAber.png" >
+<h4 align="center">
+Figure 2.1:Temperature Forecast in Aberdeen
+</h4>
+</p>
+<p><br/></p>
+<p align="center">
+<img src="img/tempforecastAbu.png" >
+<h4 align="center">
+Figure 2.2: Temperature Forecast in Abu Dhabi
+</h4>
+</p>
+<p><br/></p>
+<table class=" lightable-material lightable-striped lightable-hover" style='font-family: "Source Sans Pro", helvetica, sans-serif; margin-left: auto; margin-right: auto;'>
+<caption>
+Table 1: MSE Grid Search Abu Dhabi
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;" colspan="1">
+</th>
+<th style="padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="3">
+<div style="TRUE">
+Hidden Units
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:right;">
+Lag
+</th>
+<th style="text-align:right;">
+30
+</th>
+<th style="text-align:right;">
+50
+</th>
+<th style="text-align:right;">
+70
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+3151
+</td>
+<td style="text-align:right;">
+1086
+</td>
+<td style="text-align:right;">
+729
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+35
+</td>
+<td style="text-align:right;">
+335
+</td>
+<td style="text-align:right;">
+831
+</td>
+<td style="text-align:right;">
+506
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+45
+</td>
+<td style="text-align:right;">
+50
+</td>
+<td style="text-align:right;">
+171
+</td>
+<td style="text-align:right;">
+327
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+55
+</td>
+<td style="text-align:right;">
+121
+</td>
+<td style="text-align:right;">
+151
+</td>
+<td style="text-align:right;">
+358
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+65
+</td>
+<td style="text-align:right;">
+47
+</td>
+<td style="text-align:right;">
+178
+</td>
+<td style="text-align:right;">
+214
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+75
+</td>
+<td style="text-align:right;">
+78
+</td>
+<td style="text-align:right;">
+175
+</td>
+<td style="text-align:right;">
+192
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+85
+</td>
+<td style="text-align:right;">
+94
+</td>
+<td style="text-align:right;">
+114
+</td>
+<td style="text-align:right;">
+125
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+95
+</td>
+<td style="text-align:right;">
+77
+</td>
+<td style="text-align:right;">
+69
+</td>
+<td style="text-align:right;">
+61
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+105
+</td>
+<td style="text-align:right;">
+130
+</td>
+<td style="text-align:right;">
+102
+</td>
+<td style="text-align:right;">
+51
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+115
+</td>
+<td style="text-align:right;">
+39
+</td>
+<td style="text-align:right;">
+13
+</td>
+<td style="text-align:right;">
+8
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+125
+</td>
+<td style="text-align:right;">
+28
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+14
+</td>
+</tr>
+</tbody>
+</table>
+<table class=" lightable-material lightable-striped lightable-hover" style='font-family: "Source Sans Pro", helvetica, sans-serif; margin-left: auto; margin-right: auto;'>
+<caption>
+Table 2: MSE Grid Search Aberdeen
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;" colspan="1">
+</th>
+<th style="padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="3">
+<div style="TRUE">
+Hidden Units
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:right;">
+Lag
+</th>
+<th style="text-align:right;">
+30
+</th>
+<th style="text-align:right;">
+50
+</th>
+<th style="text-align:right;">
+70
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+2964
+</td>
+<td style="text-align:right;">
+5060
+</td>
+<td style="text-align:right;">
+4876
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+35
+</td>
+<td style="text-align:right;">
+4622
+</td>
+<td style="text-align:right;">
+3123
+</td>
+<td style="text-align:right;">
+2460
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+45
+</td>
+<td style="text-align:right;">
+1577
+</td>
+<td style="text-align:right;">
+2110
+</td>
+<td style="text-align:right;">
+2031
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+55
+</td>
+<td style="text-align:right;">
+1702
+</td>
+<td style="text-align:right;">
+1436
+</td>
+<td style="text-align:right;">
+1055
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+65
+</td>
+<td style="text-align:right;">
+1095
+</td>
+<td style="text-align:right;">
+784
+</td>
+<td style="text-align:right;">
+661
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+75
+</td>
+<td style="text-align:right;">
+595
+</td>
+<td style="text-align:right;">
+604
+</td>
+<td style="text-align:right;">
+466
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+85
+</td>
+<td style="text-align:right;">
+641
+</td>
+<td style="text-align:right;">
+367
+</td>
+<td style="text-align:right;">
+437
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+95
+</td>
+<td style="text-align:right;">
+299
+</td>
+<td style="text-align:right;">
+222
+</td>
+<td style="text-align:right;">
+270
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+105
+</td>
+<td style="text-align:right;">
+322
+</td>
+<td style="text-align:right;">
+45
+</td>
+<td style="text-align:right;">
+78
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+115
+</td>
+<td style="text-align:right;">
+76
+</td>
+<td style="text-align:right;">
+109
+</td>
+<td style="text-align:right;">
+9
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+125
+</td>
+<td style="text-align:right;">
+16
+</td>
+<td style="text-align:right;">
+34
+</td>
+<td style="text-align:right;">
+21
+</td>
+</tr>
+</tbody>
+</table>
+<p>By looking at the structure of the two cities’ time series, we notice that they share the same pattern except by the range in which they oscillate, which in the case of Abu Dhabi is given by higher temperatures. For Abu Dhabi and Aberdeen, we obtained the same optimal hyper-parameters, and their respective performance is extremely similar. This similarity suggests that the tuned hyper-parameters of one city might be accurate to forecast the temperature of other cities if they share a similar pattern throughout the time series.</p>
+<br> <br>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
